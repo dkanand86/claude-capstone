@@ -1,0 +1,6 @@
+streamlit>=1.36
+anthropic>=1.7
+sentence-transformers>=3.0
+faiss-cpu>=1.8
+pypdf>=4.0
+numpy>=1.26

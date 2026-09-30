@@ -1,0 +1,4 @@
+[server]
+# Streamlit's watcher crawls transformers' lazy modules (pulled in by sentence-transformers)
+# and floods the log with torchvision import errors.
+fileWatcherType = "none"
