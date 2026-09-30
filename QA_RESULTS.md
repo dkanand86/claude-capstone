@@ -61,7 +61,7 @@ Date: 2026-09-30. Same headless method: all 28 questions (10 A + 15 B + 3 C) on 
 | AC-04 No hardcoded key | PASS for source | `app.py` reads secrets or environment only. See finding below |
 | AC-05 Sources show filename + chunk | PASS | Browser test: "Sources (4)" expander lists `filename — chunk #N (page P) · score 0.xx` plus snippet; TXT and PDF sources shown side by side (`qa/ui_multi.png`) |
 | AC-06 History persists in session | PASS | Browser test: 2 Q&As stayed visible; still visible after adding a PDF (index rebuilt); "Clear chat" emptied it |
-| AC-07 Streamlit Cloud ready | PARTIAL | Requirements, secrets example and README exist; not deployed |
+| AC-07 Streamlit Cloud ready | PASS | Deployed to Streamlit Community Cloud from `main`. Reported by the project owner after a manual test there: PDF + TXT upload indexed (56 chunks), the Critical-deviation question answered with sources, and an out-of-scope question returned the exact fallback. `ANTHROPIC_API_KEY` came from Streamlit secrets. I did not observe the cloud app myself |
 
 ## Findings
 1. **A `.env` file containing an Anthropic API key sits in the project folder.** It is listed in `.gitignore`, but there is no git repo yet, so make sure it never gets committed or zipped for submission. Consider rotating the key if the folder has been shared.
@@ -88,4 +88,3 @@ Bugs found and fixed during this test:
 ## Not tested
 - Running with no API key (the app disables the chat box and shows a warning; not exercised).
 - A scanned, image-only PDF.
-- Deployment to Streamlit Community Cloud.
