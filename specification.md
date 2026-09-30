@@ -102,20 +102,35 @@ Question: {question}
 - Index status: number of files and chunks.
 - Top-K slider, and a "Show similarity scores" toggle (on by default).
 - "Clear chat" button.
+- "Download audit log" button (`st.download_button`), disabled while the chat is empty. See §8.1.
 - A warning if the API key is missing.
 
 **Main area**
 - Title, a short caption, and a disclaimer that the data is synthetic.
 - An info box asking the user to upload a document if no index exists yet.
-- Chat history rendered with `st.chat_message` from `st.session_state.messages` (`{"role", "content", "sources"}`).
+- Chat history rendered with `st.chat_message` from `st.session_state.messages` (see §9).
 - `st.chat_input`, disabled if there is no index or no API key.
 - Under each assistant answer, an "Sources" expander with one row per source: `**filename — chunk #N** (page P) · score 0.xx`, followed by a ~300-character snippet.
+
+### 8.1 Audit log (session export)
+The app keeps nothing on the server (rule 7), so the audit log is built on demand from `st.session_state.messages` and handed to the user as a file download. Clear chat, a reload or a new session empties it, so the user must download it before then.
+- File name: `audit_log_YYYY-MM-DD_HHMMSS.json` (UTC).
+- Each message stores `ts` (UTC, ISO 8601, seconds). Each assistant message also stores `top_k` and `status` (`answered`, `fallback` or `error`).
+- JSON layout:
+  ```
+  {"exported_at": ..., "model": CLAUDE_MODEL, "embedding_model": EMBED_MODEL,
+   "documents": [filenames currently indexed],
+   "entries": [{"timestamp", "question", "answer", "status", "top_k",
+                "sources": [{"filename", "chunk_id", "page", "score"}]}]}
+  ```
+- Sources record identifiers and scores only, not chunk text, which keeps the file small and the policy text out of it.
+- The log lists questions and answers exactly as shown. It is an advisory-use record (policy §15.2), not a quality record.
 
 ## 9. Session State
 
 | Key | Contents |
 |-----|----------|
-| `messages` | Chat history for the current session only |
+| `messages` | Chat history for the current session only: `{"role", "content", "ts"}` for the user, plus `"sources"`, `"top_k"`, `"status"` for the assistant |
 | `index`, `chunks`, `fingerprint` | Current FAISS index and its metadata |
 
 ## 10. Dependencies (`requirements.txt`)

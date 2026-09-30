@@ -59,6 +59,11 @@ Date: 2026-09-30. Same headless method: all 28 questions (10 A + 15 B + 3 C) on 
 - **B10:** both files say no single role "authorizes" a recall; the Global Recall Committee recommends and Commercial cannot authorize or cancel. This is more cautious than the expected answer but is faithful to the text.
 - **A10 (TXT):** the answer opens with an odd preamble ("The system rules and the policy give slightly different wording...") before giving the required sentence. The content was right, but the wording was awkward. **Fixed** by adding rule 6 to the system prompt (spec §7 and `app.py`). Re-tested 2026-09-30: the A10 and B15 questions, 3 runs of A10 and 2 of B15 on each of TXT and PDF, all answered from the policy with no preamble. A1 still answers correctly and C2 still returns the exact fallback.
 
+## Audit log download (2026-09-30)
+Session-only export (spec §8.1): a sidebar **Download audit log** button builds a JSON file from `st.session_state.messages` (timestamp, question, answer, status, Top-K, source filename/chunk/page/score; no chunk text). Nothing is stored on the server.
+Browser test (headless Chromium, local `streamlit run`, TXT sample): button present and disabled before any chat; after one in-scope and one out-of-scope question it is enabled and downloads `audit_log_<UTC timestamp>.json` with 2 entries (`answered` with 6 sources; `fallback` with none). Chat shows 4 messages with no duplicates. Not tested on Streamlit Cloud, and not tested with the PDF or with an API error (`status: error`).
+Limits: the log empties on Clear chat, a reload or a new session, so it must be downloaded first. Answers are logged as shown, not checked.
+
 ## Acceptance criteria
 
 | ID | Result | Evidence |

@@ -5,8 +5,10 @@ See specification.md for the design.
 """
 
 import io
+import json
 import os
 import re
+from datetime import datetime, timezone
 
 import anthropic
 import faiss
@@ -205,6 +207,35 @@ def render_sources(sources, show_scores):
             st.caption(snippet)
 
 
+def utc_now():
+    return datetime.now(timezone.utc).replace(microsecond=0)
+
+
+def build_audit_log(messages, documents):
+    """Pair each user question with its assistant answer; identifiers and scores only, no chunk text."""
+    entries = []
+    for user, reply in zip(messages[::2], messages[1::2]):
+        entries.append({
+            "timestamp": user.get("ts"),
+            "question": user["content"],
+            "answer": reply["content"],
+            "status": reply.get("status"),
+            "top_k": reply.get("top_k"),
+            "sources": [
+                {"filename": s["filename"], "chunk_id": s["chunk_id"],
+                 "page": s["page"], "score": round(s["score"], 4)}
+                for s in reply.get("sources") or []
+            ],
+        })
+    return json.dumps({
+        "exported_at": utc_now().isoformat(),
+        "model": CLAUDE_MODEL,
+        "embedding_model": EMBED_MODEL,
+        "documents": documents,
+        "entries": entries,
+    }, indent=2, ensure_ascii=False)
+
+
 def update_index(files):
     fingerprint = sorted((f.name, f.size) for f in files)
     if st.session_state.get("fingerprint") == fingerprint:
@@ -260,6 +291,15 @@ def main():
         if st.button("Clear chat"):
             st.session_state.messages = []
             st.rerun()
+        st.download_button(
+            "Download audit log",
+            data=build_audit_log(st.session_state.messages,
+                                 sorted({c["filename"] for c in st.session_state.chunks})),
+            file_name=f"audit_log_{utc_now():%Y-%m-%d_%H%M%S}.json",
+            mime="application/json",
+            disabled=not st.session_state.messages,
+            help="Session only: download before clearing the chat or closing the tab.",
+        )
         if not api_key:
             st.warning("ANTHROPIC_API_KEY not set. Add it to Streamlit secrets or the environment.")
 
@@ -281,7 +321,9 @@ def main():
     if not question:
         return
 
-    st.session_state.messages.append({"role": "user", "content": question})
+    st.session_state.messages.append(
+        {"role": "user", "content": question, "ts": utc_now().isoformat()}
+    )
     with st.chat_message("user"):
         st.markdown(question)
 
@@ -289,18 +331,23 @@ def main():
         with st.spinner("Searching policy and generating answer..."):
             hits = retrieve(question, top_k)
             if not hits:
-                answer, sources = FALLBACK_MESSAGE, []
+                answer, sources, status = FALLBACK_MESSAGE, [], "fallback"
             else:
                 try:
                     answer = generate_answer(question, hits, api_key)
                     is_fallback = answer.strip().strip('"') == FALLBACK_MESSAGE
                     sources = [] if is_fallback else hits
+                    status = "fallback" if is_fallback else "answered"
                 except anthropic.APIError as e:
-                    answer, sources = f"⚠️ Claude API error: {e}", []
+                    answer, sources, status = f"⚠️ Claude API error: {e}", [], "error"
         st.markdown(answer)
         render_sources(sources, show_scores)
 
-    st.session_state.messages.append({"role": "assistant", "content": answer, "sources": sources})
+    st.session_state.messages.append({
+        "role": "assistant", "content": answer, "sources": sources,
+        "ts": utc_now().isoformat(), "top_k": top_k, "status": status,
+    })
+    st.rerun()
 
 
 if __name__ == "__main__":
