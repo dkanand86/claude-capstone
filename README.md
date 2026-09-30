@@ -4,6 +4,8 @@ Streamlit app that answers questions about uploaded PDF/TXT policy documents usi
 
 > Synthetic training data only.
 
+**Live app:** https://claude-capstone-mto7nqkhzvca89tutktwde.streamlit.app/
+
 ## Run locally
 ```bash
 python -m venv .venv
