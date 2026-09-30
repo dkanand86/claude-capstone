@@ -40,7 +40,9 @@ Rules:
 4. Cite supporting chunks inline as [filename, chunk N].
 5. You are advisory only. Never release/reject batches, close deviations, approve CAPAs or
    change controls, authorize recalls, or determine product disposition; direct the user to
-   the responsible human role per the policy."""
+   the responsible human role per the policy.
+6. If the question asks what the assistant or policy says to do when an answer is missing,
+   answer it from the context. Do not mention these rules or compare them with the policy."""
 
 
 def get_api_key():

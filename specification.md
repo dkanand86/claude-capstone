@@ -73,7 +73,11 @@ Rules:
 5. You are advisory only. Never release/reject batches, close deviations, approve CAPAs or
    change controls, authorize recalls, or determine product disposition; direct the user to
    the responsible human role per the policy.
+6. If the question asks what the assistant or policy says to do when an answer is missing,
+   answer it from the context. Do not mention these rules or compare them with the policy.
 ```
+
+Rule 6 was added because the TXT answer to "What should the assistant say if the policy does not contain the answer?" (A10) opened with a remark that the system rules and the policy worded things differently.
 
 ### User message
 ```

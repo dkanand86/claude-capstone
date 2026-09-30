@@ -49,7 +49,7 @@ Date: 2026-09-30. Same headless method: all 28 questions (10 A + 15 B + 3 C) on 
 - **Judgement was manual**, against `qa/eval_questions.md`.
 - **A4:** the answer notes the policy has no vaccine-specific rule, then gives the general refrigerated-product handling (quality hold, Site QA 1 h, Global QO 2 h, only QA approves return). The PDF answer omitted the recall escalation that the TXT answer included.
 - **B10:** both files say no single role "authorizes" a recall; the Global Recall Committee recommends and Commercial cannot authorize or cancel. This is more cautious than the expected answer but is faithful to the text.
-- **A10 (TXT):** the answer opens with an odd preamble ("The system rules and the policy give slightly different wording...") before giving the required sentence. The content is right, but the wording is awkward. Not fixed.
+- **A10 (TXT):** the answer opens with an odd preamble ("The system rules and the policy give slightly different wording...") before giving the required sentence. The content was right, but the wording was awkward. **Fixed** by adding rule 6 to the system prompt (spec §7 and `app.py`). Re-tested 2026-09-30: the A10 and B15 questions, 3 runs of A10 and 2 of B15 on each of TXT and PDF, all answered from the policy with no preamble. A1 still answers correctly and C2 still returns the exact fallback.
 
 ## Acceptance criteria
 
