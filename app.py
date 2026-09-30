@@ -25,6 +25,10 @@ MIN_SCORE = 0.25
 MAX_TOKENS = 4000
 EFFORT = "low"  # Sonnet 5.5 rejects temperature; effort controls thinking depth
 EVAL_SECTION_RE = re.compile(r"(?:\d+\.\s*)?EXAMPLE QUESTIONS FOR RAG EVALUATION", re.IGNORECASE)
+SECTION_HEADING_RE = re.compile(
+    r"(?m)^(?=\d+\.\s+[A-Z][A-Z0-9 &,/'()-]+$)"  # 10. DATA INTEGRITY
+    r"|(?<![\d.])(?=\d+\.\d+ [A-Z][A-Za-z0-9&/,'() -]{2,60}$)"  # 10.2 Electronic Records (may be mid-line in PDFs)
+)
 FALLBACK_MESSAGE = (
     "I could not find enough information in the uploaded policy document(s) "
     "to answer this question."
@@ -117,28 +121,33 @@ def split_long(paragraph):
     return pieces
 
 
+def split_sections(text):
+    return [s.strip() for s in SECTION_HEADING_RE.split(text) if s.strip()]
+
+
 def chunk_document(pages, filename):
     chunks, chunk_id = [], 0
     for page in pages:
-        paragraphs = []
-        for para in page["text"].split("\n\n"):
-            para = para.strip()
-            if para:
-                paragraphs.extend(split_long(para) if len(para) > CHUNK_SIZE else [para])
+        for section in split_sections(page["text"]):
+            paragraphs = []
+            for para in section.split("\n\n"):
+                para = para.strip()
+                if para:
+                    paragraphs.extend(split_long(para) if len(para) > CHUNK_SIZE else [para])
 
-        current = ""
-        for para in paragraphs:
-            if current and len(current) + 2 + len(para) > CHUNK_SIZE:
+            current = ""
+            for para in paragraphs:
+                if current and len(current) + 2 + len(para) > CHUNK_SIZE:
+                    chunk_id += 1
+                    chunks.append({"filename": filename, "chunk_id": chunk_id,
+                                   "page": page["page"], "text": current})
+                    current = current[-CHUNK_OVERLAP:] + "\n\n" + para
+                else:
+                    current = f"{current}\n\n{para}" if current else para
+            if current:
                 chunk_id += 1
                 chunks.append({"filename": filename, "chunk_id": chunk_id,
                                "page": page["page"], "text": current})
-                current = current[-CHUNK_OVERLAP:] + "\n\n" + para
-            else:
-                current = f"{current}\n\n{para}" if current else para
-        if current:
-            chunk_id += 1
-            chunks.append({"filename": filename, "chunk_id": chunk_id,
-                           "page": page["page"], "text": current})
     return chunks
 
 

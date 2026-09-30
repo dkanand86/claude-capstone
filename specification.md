@@ -42,7 +42,8 @@ The whole app is one file, `app.py`, organized into the functions below.
 - Normalize whitespace: collapse runs of spaces and keep paragraph breaks (`\n\n`).
 
 ## 4. Chunking
-- Split into paragraphs on blank lines, then pack paragraphs greedily into chunks of up to `CHUNK_SIZE` characters.
+- Section-aware: before packing, split each page's text at top-level section headings (a line like `10. DATA INTEGRITY`: a number, a period, then an all-caps title). A chunk never spans two sections, and the overlap is not carried across a section boundary. This keeps topics from mixing in one chunk (a mixed supplier + data-integrity chunk ranked too low for B11 on the PDF).
+- Split each section into paragraphs on blank lines, then pack paragraphs greedily into chunks of up to `CHUNK_SIZE` characters.
 - Split any paragraph longer than `CHUNK_SIZE` on sentence or character boundaries.
 - Start each new chunk with the last `CHUNK_OVERLAP` characters of the previous chunk.
 - For PDFs, chunk each page separately so every chunk has one page number.

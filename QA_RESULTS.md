@@ -38,7 +38,15 @@ The sample policy's own section 18 lists "What are the expectations for electron
 1. The "Example questions" section is no longer indexed (`drop_eval_section`). Alone this fixed TXT but not PDF: the real chunk (16) is a mixed-topic chunk (supplier text + data integrity), so its embedding score is low and it still ranked 5th.
 2. Default Top-K raised from 4 to 6, which brings chunk 16 into the results.
 Re-test: full re-run of all 28 questions (10 A + 15 B + 3 C) on TXT and PDF at Top-K 6 with the section excluded: every in-scope question answered with the expected facts and citations (including B11 on the PDF), and C1-C3 returned the exact fallback on both files. Method: I read each answer's key facts against `qa/eval_questions.md`; long answers (A4, A7, A8, B3, B6) were checked on their opening portion, not word for word.
-Remaining weakness: retrieval quality depends on chunk boundaries. Section-aware chunking (split on numbered headings like `10.2`) would be the cleaner long-term fix. Not done.
+Remaining weakness (addressed below): retrieval quality depends on chunk boundaries.
+
+### Section-aware chunking (2026-09-30)
+Chunks now break at section headings (`10. DATA INTEGRITY`) and subsection headings (`10.2 Electronic Records`), including headings that sit mid-line in PDF text (spec §4). The sample now yields 62 chunks (TXT) and 67 (PDF), up from 29 and 27.
+- **First attempt, sections only:** PDF B11 got worse, because the whole of section 10 sat in one diluted chunk ranked 7th. Reverted to the subsection split below.
+- **With subsection splitting:** the audit-trail chunk ranks 1st on both files (score 0.41).
+- **Full re-run, 28 questions on TXT and PDF (56 answers):** an automated keyword check found 0 failures. I also read the PDF answers for B11, A7, B3, A4 and A8 and the TXT answers for A7 and A2 in full: the facts and citations were correct.
+- **Minor regression:** the PDF A8 answer no longer leads with the 10.1 core principle (ALCOA-style attributes). It covers 10.2-10.4 only, because chunks are smaller and 10.1 sits in a separate chunk. Raising Top-K or keeping `10.1` with `10.2` would fix it. Not done.
+- **Caveat:** the chunk numbers in the earlier sections of this file refer to the old chunking.
 Result now: **25 of 25 pass on TXT and PDF** (B11 after the fix).
 
 ## Re-run at current settings (Top-K 6, eval section excluded)
